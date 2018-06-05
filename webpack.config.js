@@ -15,15 +15,8 @@ module.exports = options => {
           {
             test: /\.css$/,
             use: [
-              {
-                loader: "style-loader",
-                options: {
-                  name:'[name].[ext]',
-                  outputPath: '../stylesheets',
-                  publicPath: '/stylesheets'
-                } 
-              },
-              { loader: "css-loader" },
+              { loader: "style-loader" },
+              { loader: "css-loader" }
             ]
           },
           {
@@ -36,24 +29,24 @@ module.exports = options => {
                   {
                     loader: 'file-loader',
                     options: {
-                      name: '[name].[ext]',
                       outputPath: '../images',
                       publicPath: '/images'
                     }
-                  }
+                  }  
             ]
           },
           {
-            test: /\.js$/,
+            test: /\.jsx?$/,
             exclude: /node_modules/,
             use: [
-              {
-                loader: 'babel-loader',
-                options: {
-                  cacheDirectory: true,
-                },
-              },
-            ],
+                  {
+                    loader: 'babel-loader',
+                    options: {
+                      cacheDirectory: true,
+                      presets: ['react']
+                    }
+                  }
+            ]
           },
         ],
       },

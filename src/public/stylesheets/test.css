@@ -1,0 +1,26 @@
+#logo{
+    width: 100%;
+}
+
+#logo img{
+    display:block;
+    margin:auto;
+    width: 25%;
+}
+
+#selectViewForm{
+    text-align: center;
+    width: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 100%;
+}
+
+#imageSearchForm{
+    text-align: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 100%;
+}
+
+#imageSearchForm input[type=search]{
+    width: 75%;
+}
