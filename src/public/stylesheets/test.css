@@ -24,3 +24,17 @@
 #imageSearchForm input[type=search]{
     width: 75%;
 }
+
+#Gallery {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); 
+    grid-auto-rows: minmax(100px, auto);
+    text-align: center;
+}
+  
+#Gallery .imageView{
+    width: 100%;
+}

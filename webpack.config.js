@@ -1,5 +1,7 @@
 var HTMLWebpackPlugin = require('html-webpack-plugin');
+var webpack = require('webpack');
 var path = require('path');
+var dotenv = require('dotenv').config();
 
 module.exports = options => {
   return {
@@ -50,10 +52,17 @@ module.exports = options => {
           },
         ],
       },
-      plugins:[
+
+      plugins: [
         new HTMLWebpackPlugin({
-            template: './src/index.html',
-            filename: '../../index.html'
+          template: './src/index.html',
+          filename: '../../index.html'
+        }),
+
+        new webpack.DefinePlugin({
+          'process.env':{
+            'BING_SEARCH_API_KEY': JSON.stringify(process.env.BING_SEARCH_API_KEY)
+          }
         })
       ],
     }

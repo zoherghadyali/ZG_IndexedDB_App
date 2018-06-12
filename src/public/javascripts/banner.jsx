@@ -3,8 +3,8 @@ import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
 import test from '../stylesheets/test.css'
-import Content from './content.jsx'
-
+import Search from './search.jsx'
+import Gallery from './gallery.jsx'
 
 export default class Banner extends Component {
     constructor(props){
@@ -13,13 +13,33 @@ export default class Banner extends Component {
             selectedView: "BingSearch"
         }
         
-        this.handleViewChange = this.handleViewChange.bind(this);
+        this.handleChange = this.handleChange.bind(this);
     }    
 
-    handleViewChange(e){
+    handleChange(e){
         this.setState({             
             selectedView: e.target.value
         });
+    }
+
+    handleView(state){
+        if (state.selectedView === "BingSearch"){
+            return (
+                <Search />
+            )
+        } else if (state.selectedView === "Gallery"){
+            return (
+                <Gallery loadImagesFromIndexedDB />
+            )
+        } else {
+            console.log("How the fuck did you get here? Here is the state: ");
+            console.log(state);
+            return (
+              <div>
+                  <p>How the fuck did you get here?</p>
+              </div>
+            )  
+        }
     }
     
     render() {
@@ -28,16 +48,16 @@ export default class Banner extends Component {
           <form name="selectViewForm" id="selectViewForm">
             <div>
                 <label>
-                    <input type="radio" name="selectView" value="BingSearch" onChange={this.handleViewChange} checked={this.state.selectedView === "BingSearch"} />
+                    <input type="radio" name="selectView" value="BingSearch" onChange={this.handleChange} checked={this.state.selectedView === "BingSearch"} />
                     Bing Search
                 </label>
                 <label>
-                    <input type="radio" name="selectView" value="Gallery" onChange={this.handleViewChange} checked={this.state.selectedView === "Gallery"} />
+                    <input type="radio" name="selectView" value="Gallery" onChange={this.handleChange} checked={this.state.selectedView === "Gallery"} />
                     Gallery
                 </label>
             </div>
           </form>
-          <Content selectedView={this.state.selectedView}/>
+          {this.handleView(this.state)}
         </div>
       )
     }
