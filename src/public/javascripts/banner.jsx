@@ -35,9 +35,7 @@ export default class Banner extends Component {
             console.log("How the fuck did you get here? Here is the state: ");
             console.log(state);
             return (
-              <div>
-                  <p>How the fuck did you get here?</p>
-              </div>
+                <p>How the fuck did you get here?</p>
             )  
         }
     }

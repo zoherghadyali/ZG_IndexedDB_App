@@ -3,16 +3,18 @@ import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 import fetch from 'node-fetch';
 
-export default class Gallery extends Component {
+export default class ImageView extends Component {
     constructor(props){
         super(props);
         this.state = {
             url: props.url,
-            loadImagesFromIndexedDB: props.loadImagesFromIndexedDB
+            saved: false,
+            loadImagesFromIndexedDB: props.loadImagesFromIndexedDB,
+            updateGallery: props.updateGallery
         }
 
         this.handleClick = this.handleClick.bind(this);
-        this.blobToDataUrl = this.blobToDataUrl.bind(this);
+        // this.blobToDataUrl = this.blobToDataUrl.bind(this);
     }    
 
     blobToDataUrl(blob){
@@ -59,11 +61,15 @@ export default class Gallery extends Component {
     }
 
     saveToIndexedDB(dataUrl, db){
+        var self = this;
         return new Promise((resolve, reject) => {
             var transaction = db.transaction(["images"], "readwrite");
 
             transaction.oncomplete = function(e) {
                 console.log("Completed readwrite transaction");
+                self.setState({
+                    saved: true
+                });
                 resolve();
             };
                         
@@ -100,6 +106,18 @@ export default class Gallery extends Component {
             .then(combinedPromiseResults => self.saveToIndexedDB(combinedPromiseResults[0], combinedPromiseResults[1]));
         e.preventDefault();
     }
+
+    handleView(state){
+        if (state.saved){
+            return (
+                <p>Saved!</p>
+            )  
+        } else {
+            return (
+                <button type="button" className="imageViewButton" onClick={this.handleClick}>Save image</button>
+            )
+        }
+    }
     
     render() {
       return (
@@ -109,7 +127,7 @@ export default class Gallery extends Component {
                     <img className="imageView" src={this.state.url} />
                 </figure>
             </a>
-            <button type="button" className="imageViewButton" onClick={this.handleClick}>Save image</button>
+            {this.handleView(this.state)}
           </div>
       )
     }
