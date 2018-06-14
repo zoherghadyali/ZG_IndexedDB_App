@@ -12,9 +12,22 @@ export default class Gallery extends Component {
             images: props.images,
             context: props.context,
             savedImages: [],
+            test: undefined,
             loadImagesFromIndexedDB: props.loadImagesFromIndexedDB
         }
+
+        this.updateGallery = this.updateGallery.bind(this);
     }    
+
+    componentWillMount(){
+        this.openIndexedDB()
+            .then(db => this.readAllImagesFromIndexedDB(db))
+            .then(items => {
+                this.setState({
+                    savedImages: items
+                })
+            });
+    }
 
     componentWillReceiveProps(nextProps){
         this.setState({
@@ -57,23 +70,22 @@ export default class Gallery extends Component {
         });    
     }
 
-    updateGallery(){
-        var self = this;
-        this.openIndexedDB
-            .then(db => self.readAllImagesFromIndexedDB(db))
-            .then(items => self.setState({
-                savedImages: items
-            }));
+    updateGallery(id){
+        this.setState({
+            savedImages: [...this.state.savedImages, id]
+        });
     }
 
     readAllImagesFromIndexedDB(db){
-        var self = this;
+        this.setState({
+            test: db
+        })
+        
         return new Promise((resolve, reject) => {
             var transaction = db.transaction(["images"], "readonly");
 
             transaction.oncomplete = function(e) {
                 console.log("Completed readonly transaction");
-                resolve();
             };
                         
             transaction.onerror = function(e) {
@@ -87,16 +99,12 @@ export default class Gallery extends Component {
             var items = [];
 
             getAll.onsuccess = function(e) {
-                var cursor = event.target.result;
+                var cursor = e.target.result;
                 if(!cursor){
-                    console.log("I've reached the end. Here are the items: ", items);
-                    // self.setState({
-                    //     savedImages: items
-                    // });
                     resolve(items);
+                    return;
                 }
-                items.push(cursor.value);
-                console.log("ITEMS: ", items);
+                items.push(cursor.value.id);
                 cursor.continue();
             };
         });
@@ -113,10 +121,10 @@ export default class Gallery extends Component {
                     <p>Found {state.images.length} results for '{state.context}'</p>
                     <div id="Gallery">
                         {state.images.map((image)=>
-                            <ImageView url={image.contentUrl} key={image.imageId} loadImagesFromIndexedDB={state.loadImagesFromIndexedDB} />
+                            <ImageView url={image.contentUrl} key={image.imageId} saved={state.savedImages.includes(image.imageId)} id={image.imageId} loadImagesFromIndexedDB={state.loadImagesFromIndexedDB} updateGallery={this.updateGallery} openIndexedDB={this.openIndexedDB}/>
                         )}
                     </div>
-                    <ClearGallery />
+                    <ClearGallery db={state.db}/>
                 </div>
             )
         }

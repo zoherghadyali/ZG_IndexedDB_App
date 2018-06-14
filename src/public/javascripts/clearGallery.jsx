@@ -5,33 +5,45 @@ import ReactDOM from 'react-dom'
 export default class ClearGallery extends Component {
     constructor(props){
         super(props);
-        this.state = {}
+        this.state = {
+            db: props.db
+        }
 
         this.handleClick = this.handleClick.bind(this);
     }    
 
-    deleteIndexedDB(){
+    componentWillReceiveProps(nextProps){
+        this.setState({
+            db: nextProps.db
+        });
+    }
+
+
+    clearIndexedDB(){
         return new Promise((resolve, reject) => {
-            var req = window.indexedDB.deleteDatabase("MyTestDatabase");
-            req.onsuccess = function(e){
-                console.log("Deleted database successfully");
-                resolve();
+            var transaction = this.db.transaction(["images"], "readwrite");
+
+            transaction.oncomplete = function(e) {
+                console.log("Completed readwrite transaction");
             };
-            req.onerror = function(e){
-                console.error("Couldn't delete database: ", e.target.errorCode);
+                        
+            transaction.onerror = function(e) {
+                console.error("Transaction error: ", e.target.errorCode);
                 reject(e.target.errorCode);
-            };
-            req.onblocked = function(e){
-                console.error("Couldn't delete database due to the operation being blocked");
-                reject("Couldn't delete database due to the operation being blocked")
+            };  
+
+            var objectStore = transaction.objectStore("images"); 
+            var clearAll = objectStore.clear();
+            
+            clearAll.onsuccess = function(e) {
+                resolve();
             };
         });
     }
 
     handleClick(e){
-        this.deleteIndexedDB()
+        this.clearIndexedDB()
             .then(e.preventDefault());
-        // e.preventDefault();
     }
     
     render() {

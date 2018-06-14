@@ -8,14 +8,21 @@ export default class ImageView extends Component {
         super(props);
         this.state = {
             url: props.url,
-            saved: false,
+            saved: props.saved,
+            id: props.id,
             loadImagesFromIndexedDB: props.loadImagesFromIndexedDB,
-            updateGallery: props.updateGallery
+            updateGallery: props.updateGallery,
+            openIndexedDB: props.openIndexedDB
         }
 
         this.handleClick = this.handleClick.bind(this);
-        // this.blobToDataUrl = this.blobToDataUrl.bind(this);
     }    
+
+    componentWillReceiveProps(nextProps){
+        this.setState({
+            saved: nextProps.saved
+        });
+    }
 
     blobToDataUrl(blob){
         return new Promise((resolve, reject) => {
@@ -26,51 +33,16 @@ export default class ImageView extends Component {
             fr.readAsDataURL(blob);
         });
     }
-
-    openIndexedDB(){
-        function dbErrorHandler(db, reject){
-            db.onerror = function(e){
-                console.error("Database error: ", e.target.errorCode);
-                reject(e.target.errorCode);
-            }
-        }
-
-        return new Promise((resolve, reject) => {
-            var db;
-            var request = window.indexedDB.open("MyTestDatabase", 1);
-
-            request.onerror = function(e){
-                console.error("Request error: ", e.target.errorCode);
-                reject(e.target.errorCode);
-            }
-
-            request.onupgradeneeded = function(e){
-                console.log("Creating a new database or upgrading...");
-                db = e.target.result;
-                dbErrorHandler(db, reject);
-                var objectStore = db.createObjectStore("images", { autoIncrement: true });
-            }
-
-            request.onsuccess = function(e){
-                console.log("Success opening DB");
-                db = e.target.result;
-                dbErrorHandler(db, reject);
-                resolve(db);
-            }
-        });    
-    }
-
+    
     saveToIndexedDB(dataUrl, db){
         var self = this;
+
         return new Promise((resolve, reject) => {
             var transaction = db.transaction(["images"], "readwrite");
 
             transaction.oncomplete = function(e) {
                 console.log("Completed readwrite transaction");
-                self.setState({
-                    saved: true
-                });
-                resolve();
+                resolve(self.state.id);
             };
                         
             transaction.onerror = function(e) {
@@ -79,19 +51,21 @@ export default class ImageView extends Component {
             };  
                 
             var objectStore = transaction.objectStore("images"); 
-            objectStore.add(dataUrl);
+            objectStore.add({
+                id: this.state.id,
+                data: dataUrl
+            });
         });
     }
 
     getDataUrlAndOpenDB(blob) {
         var dataUrl = this.blobToDataUrl(blob);
-        var db = this.openIndexedDB();
+        var db = this.state.openIndexedDB();
         return Promise.all([dataUrl, db]);
     }
     
     handleClick(e){
-        var self = this;
-        fetch(self.state.url, {
+        fetch(this.state.url, {
                 method: 'GET'
             })
             .then(res => {
@@ -102,8 +76,9 @@ export default class ImageView extends Component {
                     return res.blob()
                 }
             })
-            .then(blob => self.getDataUrlAndOpenDB(blob))
-            .then(combinedPromiseResults => self.saveToIndexedDB(combinedPromiseResults[0], combinedPromiseResults[1]));
+            .then(blob => this.getDataUrlAndOpenDB(blob))
+            .then(combinedPromiseResults => this.saveToIndexedDB(combinedPromiseResults[0], combinedPromiseResults[1]))
+            .then(id => this.state.updateGallery(id));
         e.preventDefault();
     }
 
