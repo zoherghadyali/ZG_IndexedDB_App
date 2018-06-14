@@ -1,7 +1,6 @@
 // index.js
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
-import fetch from 'node-fetch';
 
 import logoImage from '../images/bing.jpg'
 import Gallery from './gallery.jsx'

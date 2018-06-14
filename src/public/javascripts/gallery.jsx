@@ -12,7 +12,7 @@ export default class Gallery extends Component {
             images: props.images,
             context: props.context,
             savedImages: [],
-            test: undefined,
+            db: undefined,
             loadImagesFromIndexedDB: props.loadImagesFromIndexedDB
         }
 
@@ -21,11 +21,17 @@ export default class Gallery extends Component {
 
     componentWillMount(){
         this.openIndexedDB()
-            .then(db => this.readAllImagesFromIndexedDB(db))
+            .then(db => {
+                this.setState({
+                    db: db
+                });
+                return this.readAllImagesFromIndexedDB(db);
+            })
             .then(items => {
                 this.setState({
                     savedImages: items
-                })
+                });
+                return;
             });
     }
 
@@ -71,23 +77,23 @@ export default class Gallery extends Component {
     }
 
     updateGallery(id){
-        this.setState({
-            savedImages: [...this.state.savedImages, id]
-        });
+        if (id === "clear"){
+            this.setState({
+                savedImages: []
+            });
+        } else {
+            this.setState({
+                savedImages: [...this.state.savedImages, id]
+            });
+        }
     }
 
     readAllImagesFromIndexedDB(db){
-        this.setState({
-            test: db
-        })
-        
         return new Promise((resolve, reject) => {
             var transaction = db.transaction(["images"], "readonly");
+            
+            //didn't need to do anything on transaction.oncomplete
 
-            transaction.oncomplete = function(e) {
-                console.log("Completed readonly transaction");
-            };
-                        
             transaction.onerror = function(e) {
                 console.error("Transaction error: ", e.target.errorCode);
                 reject(e.target.errorCode);
@@ -121,10 +127,10 @@ export default class Gallery extends Component {
                     <p>Found {state.images.length} results for '{state.context}'</p>
                     <div id="Gallery">
                         {state.images.map((image)=>
-                            <ImageView url={image.contentUrl} key={image.imageId} saved={state.savedImages.includes(image.imageId)} id={image.imageId} loadImagesFromIndexedDB={state.loadImagesFromIndexedDB} updateGallery={this.updateGallery} openIndexedDB={this.openIndexedDB}/>
+                            <ImageView url={image.contentUrl} key={image.imageId} saved={state.savedImages.includes(image.imageId)} id={image.imageId} loadImagesFromIndexedDB={state.loadImagesFromIndexedDB} updateGallery={this.updateGallery} db={state.db}/>
                         )}
                     </div>
-                    <ClearGallery db={state.db}/>
+                    <ClearGallery db={state.db} updateGallery={this.updateGallery}/>
                 </div>
             )
         }

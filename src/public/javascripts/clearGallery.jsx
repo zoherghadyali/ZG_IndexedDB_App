@@ -6,7 +6,8 @@ export default class ClearGallery extends Component {
     constructor(props){
         super(props);
         this.state = {
-            db: props.db
+            db: props.db,
+            updateGallery: props.updateGallery
         }
 
         this.handleClick = this.handleClick.bind(this);
@@ -18,15 +19,12 @@ export default class ClearGallery extends Component {
         });
     }
 
-
     clearIndexedDB(){
         return new Promise((resolve, reject) => {
-            var transaction = this.db.transaction(["images"], "readwrite");
+            var transaction = this.state.db.transaction(["images"], "readwrite");
 
-            transaction.oncomplete = function(e) {
-                console.log("Completed readwrite transaction");
-            };
-                        
+            //didn't need to do anything on transaction.oncomplete
+            
             transaction.onerror = function(e) {
                 console.error("Transaction error: ", e.target.errorCode);
                 reject(e.target.errorCode);
@@ -36,14 +34,15 @@ export default class ClearGallery extends Component {
             var clearAll = objectStore.clear();
             
             clearAll.onsuccess = function(e) {
-                resolve();
+                resolve("clear");
             };
         });
     }
 
     handleClick(e){
         this.clearIndexedDB()
-            .then(e.preventDefault());
+            .then(id => this.state.updateGallery(id));
+        e.preventDefault()
     }
     
     render() {

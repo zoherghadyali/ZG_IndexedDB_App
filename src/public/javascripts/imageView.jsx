@@ -1,7 +1,6 @@
 // index.js
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
-import fetch from 'node-fetch';
 
 export default class ImageView extends Component {
     constructor(props){
@@ -12,7 +11,8 @@ export default class ImageView extends Component {
             id: props.id,
             loadImagesFromIndexedDB: props.loadImagesFromIndexedDB,
             updateGallery: props.updateGallery,
-            openIndexedDB: props.openIndexedDB
+            db: props.db,
+            disabled: false
         }
 
         this.handleClick = this.handleClick.bind(this);
@@ -20,11 +20,13 @@ export default class ImageView extends Component {
 
     componentWillReceiveProps(nextProps){
         this.setState({
-            saved: nextProps.saved
+            saved: nextProps.saved,
+            db: nextProps.db
         });
     }
 
     blobToDataUrl(blob){
+        console.log("I kept going for some reason...");
         return new Promise((resolve, reject) => {
             var fr = new FileReader();  
             fr.onload = function() {
@@ -34,14 +36,13 @@ export default class ImageView extends Component {
         });
     }
     
-    saveToIndexedDB(dataUrl, db){
+    saveToIndexedDB(dataUrl){
         var self = this;
 
         return new Promise((resolve, reject) => {
-            var transaction = db.transaction(["images"], "readwrite");
+            var transaction = this.state.db.transaction(["images"], "readwrite");
 
             transaction.oncomplete = function(e) {
-                console.log("Completed readwrite transaction");
                 resolve(self.state.id);
             };
                         
@@ -57,12 +58,6 @@ export default class ImageView extends Component {
             });
         });
     }
-
-    getDataUrlAndOpenDB(blob) {
-        var dataUrl = this.blobToDataUrl(blob);
-        var db = this.state.openIndexedDB();
-        return Promise.all([dataUrl, db]);
-    }
     
     handleClick(e){
         fetch(this.state.url, {
@@ -71,14 +66,17 @@ export default class ImageView extends Component {
             .then(res => {
                 if (!res.ok){
                     console.error(res.statusText);
-                    return res;
+                    throw res.statusText;
                 } else {
                     return res.blob()
                 }
             })
-            .then(blob => this.getDataUrlAndOpenDB(blob))
-            .then(combinedPromiseResults => this.saveToIndexedDB(combinedPromiseResults[0], combinedPromiseResults[1]))
-            .then(id => this.state.updateGallery(id));
+            .then(blob => this.blobToDataUrl(blob))
+            .then(dataUrl => this.saveToIndexedDB(dataUrl))
+            .then(id => this.state.updateGallery(id))
+            .catch(error => this.setState({
+                disabled: true     
+            }));
         e.preventDefault();
     }
 
@@ -89,7 +87,7 @@ export default class ImageView extends Component {
             )  
         } else {
             return (
-                <button type="button" className="imageViewButton" onClick={this.handleClick}>Save image</button>
+                <button type="button" className="imageViewButton" onClick={this.handleClick} disabled={state.disabled}>Save image</button>
             )
         }
     }
