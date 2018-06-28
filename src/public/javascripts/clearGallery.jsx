@@ -1,27 +1,16 @@
-// index.js
+// clearGallery.jsx
 import React, { Component } from 'react'
-import ReactDOM from 'react-dom'
 
 export default class ClearGallery extends Component {
     constructor(props){
         super(props);
-        this.state = {
-            db: props.db,
-            clearGallery: props.clearGallery
-        }
 
         this.handleClick = this.handleClick.bind(this);
-    }    
-
-    componentWillReceiveProps(nextProps){
-        this.setState({
-            db: nextProps.db
-        });
     }
 
     clearIndexedDB(){
         return new Promise((resolve, reject) => {
-            var transaction = this.state.db.transaction(["images"], "readwrite");
+            var transaction = this.props.db.transaction(["images"], "readwrite");
 
             //didn't need to do anything on transaction.oncomplete
             
@@ -34,21 +23,21 @@ export default class ClearGallery extends Component {
             var clearAll = objectStore.clear();
             
             clearAll.onsuccess = function(e) {
-                resolve("clear");
+                resolve();
             };
         });
     }
 
     handleClick(e){
         this.clearIndexedDB()
-            .then(this.state.clearGallery());
+            .then(this.props.clearGallery());
         e.preventDefault()
     }
     
     render() {
-      return (
-          <button type="button" onClick={this.handleClick}>Clear gallery</button>
-      )
+        return (
+            <button type="button" className="button" onClick={this.handleClick}>Clear gallery</button>
+        )
     }
-  }
+}
 

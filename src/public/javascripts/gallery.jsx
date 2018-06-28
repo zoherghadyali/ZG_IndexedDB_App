@@ -1,4 +1,4 @@
-// gallery.js
+// gallery.jsx
 import React, { Component } from 'react'
 
 import ImageView from './imageView.jsx'
@@ -8,21 +8,16 @@ export default class Gallery extends Component {
     constructor(props){
         super(props);
         this.state = {
-            searchedImages: props.searchedImages,
-            searchTerm: props.searchTerm,
-            savedImageIds: [],
-            savedImageData: [],
-            db: undefined,
-            loadImagesFromIndexedDB: props.loadImagesFromIndexedDB
+            savedImages: [],
+            db: undefined
         }
 
         this.addToGallery = this.addToGallery.bind(this);
         this.clearGallery = this.clearGallery.bind(this);
         this.removeFromGallery = this.removeFromGallery.bind(this);
-    }    
+    }
 
     componentWillMount(){
-        var self = this;
         this.openIndexedDB()
             .then(db => {
                 this.setState({
@@ -31,24 +26,10 @@ export default class Gallery extends Component {
                 return this.readAllImagesFromIndexedDB(db);
             })
             .then(items => {
-                var array = [];
-                for (var i = 0; i < items.length; i++){
-                    array.push(items[i].id);
-                }
                 this.setState({
-                    savedImageData: items,
-                    savedImageIds: array
+                    savedImages: items
                 });
-                return;
             });
-    }
-
-    componentWillReceiveProps(nextProps){
-        this.setState({
-            searchedImages: nextProps.searchedImages,
-            searchTerm: nextProps.searchTerm,
-            loadImagesFromIndexedDB: nextProps.loadImagesFromIndexedDB
-        });
     }
 
     openIndexedDB(){
@@ -84,36 +65,26 @@ export default class Gallery extends Component {
         });    
     }
 
-    addToGallery(id){
+    addToGallery(savedImage){
         this.setState({
-            savedImageIds: [...this.state.savedImageIds, id]
+            savedImages: [...this.state.savedImages, savedImage]
         });
     }
 
     clearGallery(){
         this.setState({
-            savedImageIds: []
+            savedImages: []
         });
     }
 
-    removeFromGallery(id){
-        var array = this.state.savedImageIds;
-        var index = array.indexOf(id);
-        var filteredArray = this.state.savedImageData.filter(savedImage => savedImage.id !== id);
-
-        if (index > -1){
-            array.splice(index, 1);
-            this.setState({
-                savedImageIds: array,
-                savedImageData: filteredArray
-            });
-        } else {
-            console.error("The id to be removed isn't in the array of savedImageIds. How did this happen?");
-        }
+    removeFromGallery(deletedImageId){
+        var filteredArray = this.state.savedImages.filter(savedImage => savedImage.id !== deletedImageId);
+        this.setState({
+            savedImages: filteredArray
+        });
     }
 
     readAllImagesFromIndexedDB(db){
-        var self = this;
         return new Promise((resolve, reject) => {
             var transaction = db.transaction(["images"], "readonly");
             
@@ -148,40 +119,44 @@ export default class Gallery extends Component {
         });
     }
 
-    handleView(state){
-        if (state.loadImagesFromIndexedDB){
-            if (state.savedImageData.length){
+    handleView(){
+        if (this.props.loadImagesFromIndexedDB){
+            if (this.state.savedImages.length){
                 return (
                     <div>
                         <div id="GalleryHeader">
                             <p>Saved images:</p>
-                            <ClearGallery db={state.db} clearGallery={this.clearGallery}/>
+                            <ClearGallery db={this.state.db} clearGallery={this.clearGallery}/>
                         </div>
                         <div id="Gallery">
-                            {state.savedImageData.map((savedImage)=>
-                                <ImageView url={savedImage.data} key={savedImage.id} saved id={savedImage.id} loadImagesFromIndexedDB addToGallery={this.addToGallery} removeFromGallery={this.removeFromGallery} db={state.db}/>
+                            {this.state.savedImages.map((savedImage)=>
+                                <ImageView url={savedImage.data} key={savedImage.id} saved id={savedImage.id} addToGallery={this.addToGallery} removeFromGallery={this.removeFromGallery} db={this.state.db}/>
                             )}
                         </div>
                     </div>
-                );
+                )
             } else {
                 return (
                     <div>
                         <p>Saved images: </p>
                         <p>Uh-oh! It looks like you haven't saved any images yet.</p>
                     </div>
-                );
+                )
             }
         } else {
+            var savedImageIds = [];
+            for (var i = 0; i < this.state.savedImages.length; i++){
+                savedImageIds.push(this.state.savedImages[i].id);
+            }
             return (
                 <div>
                     <div id="GalleryHeader">
-                        <p>Found {state.searchedImages.length} results for '{state.searchTerm}'</p>
-                        <ClearGallery db={state.db} clearGallery={this.clearGallery}/>
+                        <p>Found {this.props.searchedImages.length} results for '{this.props.searchTerm}'</p>
+                        <ClearGallery db={this.state.db} clearGallery={this.clearGallery}/>
                     </div>
                     <div id="Gallery">
-                        {state.searchedImages.map((image)=>
-                            <ImageView url={image.contentUrl} key={image.imageId} saved={state.savedImageIds.includes(image.imageId)} id={image.imageId} loadImagesFromIndexedDB={state.loadImagesFromIndexedDB}  addToGallery={this.addToGallery} removeFromGallery={this.removeFromGallery} db={state.db}/>
+                        {this.props.searchedImages.map((image)=>
+                            <ImageView url={image.contentUrl} key={image.imageId} saved={savedImageIds.includes(image.imageId)} id={image.imageId} addToGallery={this.addToGallery} removeFromGallery={this.removeFromGallery} db={this.state.db}/>
                         )}
                     </div>
                 </div>
@@ -190,11 +165,11 @@ export default class Gallery extends Component {
     }
     
     render() {
-      return (
-        <div>
-            {this.handleView(this.state)}
-        </div>
-      )
+        return (
+            <div>
+                {this.handleView()}
+            </div>
+        )
     }
-  }
+}
 

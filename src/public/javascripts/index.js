@@ -5,13 +5,13 @@ import ReactDOM from 'react-dom'
 import Banner from './banner.jsx'
 
 class App extends Component {
-  render() {
-    return (
-      <div>
-        <Banner/>
-      </div>
-    )
-  }
+    render() {
+        return (
+            <div>
+                <Banner/>
+            </div>
+        )
+    }
 }
 
 const root = document.querySelector('#root')

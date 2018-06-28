@@ -1,30 +1,15 @@
-// index.js
+// imageView.jsx
 import React, { Component } from 'react'
-import ReactDOM from 'react-dom'
 
 export default class ImageView extends Component {
     constructor(props){
         super(props);
         this.state = {
-            url: props.url,
-            saved: props.saved,
-            id: props.id,
-            loadImagesFromIndexedDB: props.loadImagesFromIndexedDB,
-            addToGallery: props.addToGallery,
-            removeFromGallery: props.removeFromGallery,
-            db: props.db,
             disabled: false
         }
 
         this.handleSave = this.handleSave.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
-    }    
-
-    componentWillReceiveProps(nextProps){
-        this.setState({
-            saved: nextProps.saved,
-            db: nextProps.db
-        });
     }
 
     blobToDataUrl(blob){
@@ -38,36 +23,35 @@ export default class ImageView extends Component {
     }
     
     saveToIndexedDB(dataUrl){
-        var self = this;
-
         return new Promise((resolve, reject) => {
-            var transaction = this.state.db.transaction(["images"], "readwrite");
+            var transaction = this.props.db.transaction(["images"], "readwrite");
 
             transaction.oncomplete = function(e) {
-                resolve(self.state.id);
+                resolve(savedImage);
             };
-                        
+
             transaction.onerror = function(e) {
                 console.error("Transaction error: ", e.target.errorCode);
                 reject(e.target.errorCode);
             };  
                 
             var objectStore = transaction.objectStore("images"); 
-            objectStore.add({
-                id: this.state.id,
+            var savedImage = {
+                id: this.props.id,
                 data: dataUrl
-            });
+            };
+            objectStore.add(savedImage);
         });
     }
 
-    deleteFromIndexedDB(id){
+    deleteFromIndexedDB(){
         var self = this;
 
         return new Promise((resolve, reject) => {
-            var transaction = this.state.db.transaction(["images"], "readwrite");
+            var transaction = this.props.db.transaction(["images"], "readwrite");
 
             transaction.oncomplete = function(e) {
-                resolve(self.state.id);
+                resolve(self.props.id);
             };
                         
             transaction.onerror = function(e) {
@@ -76,12 +60,12 @@ export default class ImageView extends Component {
             };  
                 
             var objectStore = transaction.objectStore("images"); 
-            objectStore.delete(this.state.id);
+            objectStore.delete(this.props.id);
         });
     }
     
     handleSave(e){
-        fetch(this.state.url, {
+        fetch(this.props.url, {
                 method: 'GET'
             })
             .then(res => {
@@ -94,31 +78,26 @@ export default class ImageView extends Component {
             })
             .then(blob => this.blobToDataUrl(blob))
             .then(dataUrl => this.saveToIndexedDB(dataUrl))
-            .then(id => this.state.addToGallery(id))
-            .catch(error => this.setState({
-                disabled: true     
-            }));
+            .then(id => this.props.addToGallery(id))
+            .catch(error => this.setState({ disabled: true }));
         e.preventDefault();
     }
 
     handleDelete(e){
-        console.log("Handling delete...");
         this.deleteFromIndexedDB()
-            .then(id => this.state.removeFromGallery(id))
-            .catch(error => this.setState({
-                disabled: true
-            }));
+            .then(id => this.props.removeFromGallery(id))
+            .catch(error => this.setState({ disabled: true }));
         e.preventDefault();
     }
 
-    handleView(state){
-        if (state.saved){
+    handleView(){
+        if (this.props.saved){
             return (
-                <button type="button" className="imageViewButton" onClick={this.handleDelete} disabled={state.disabled}>Delete image</button>
+                <button type="button" className="button" onClick={this.handleDelete} disabled={this.state.disabled}>Delete image</button>
             )  
         } else {
             return (
-                <button type="button" className="imageViewButton" onClick={this.handleSave} disabled={state.disabled}>Save image</button>
+                <button type="button" className="button" onClick={this.handleSave} disabled={this.state.disabled}>Save image</button>
             )
         }
     }
@@ -127,9 +106,9 @@ export default class ImageView extends Component {
       return (
           <div>
             <figure>
-                <img className="imageView" src={this.state.url} />
+                <img className="imageView" src={this.props.url} />
             </figure>
-            {this.handleView(this.state)}
+            {this.handleView()}
           </div>
       )
     }

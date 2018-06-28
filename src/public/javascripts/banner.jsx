@@ -21,38 +21,38 @@ export default class Banner extends Component {
         });
     }
 
-    handleView(state){
-        if (state.selectedView === "BingSearch"){
+    handleView(){
+        if (this.state.selectedView === "BingSearch"){
             return (
                 <Search />
             )
-        } else if (state.selectedView === "Gallery"){
+        } else if (this.state.selectedView === "Gallery"){
             return (
                 <Gallery loadImagesFromIndexedDB={true} />
             )
         } else {
-            console.error("Unknown state in Banner component: ", state);
+            console.error("Unknown state in Banner component: ", this.state);
         }
     }
     
     render() {
-      return (
-        <div>
-          <form name="selectViewForm" id="selectViewForm">
+        return (
             <div>
-                <label>
-                    <input type="radio" name="selectView" value="BingSearch" onChange={this.handleChange} checked={this.state.selectedView === "BingSearch"} />
-                    Bing Search
-                </label>
-                <label>
-                    <input type="radio" name="selectView" value="Gallery" onChange={this.handleChange} checked={this.state.selectedView === "Gallery"} />
-                    Gallery
-                </label>
+                <form name="selectViewForm" id="selectViewForm">
+                    <div>
+                        <label>
+                            <input type="radio" name="selectView" value="BingSearch" onChange={this.handleChange} checked={this.state.selectedView === "BingSearch"} />
+                            Bing Search
+                        </label>
+                        <label>
+                            <input type="radio" name="selectView" value="Gallery" onChange={this.handleChange} checked={this.state.selectedView === "Gallery"} />
+                            Gallery
+                        </label>
+                    </div>
+                </form>
+                {this.handleView()}
             </div>
-          </form>
-          {this.handleView(this.state)}
-        </div>
-      )
+        )
     }
-  }
+}
 

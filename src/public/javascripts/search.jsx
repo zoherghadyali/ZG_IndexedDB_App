@@ -26,7 +26,6 @@ export default class Search extends Component {
 
     handleSubmit(e) {
         if (this.state.searchTerm){
-            var self = this;
             fetch('https://api.cognitive.microsoft.com/bing/v7.0/images/search?q=' + encodeURI(this.state.searchTerm), {
                 headers: {
                   'Ocp-Apim-Subscription-Key': process.env.BING_SEARCH_API_KEY,
@@ -41,13 +40,13 @@ export default class Search extends Component {
                     return res.json()
                 }
             })
-            .then(function(json){
-                self.setState({
+            .then(json => {
+                this.setState({
                     searchSubmitted: true,
                     searchedImages: json.value
                 });
             })
-            .catch(self.setState({ searchSubmitted: true }));
+            .catch(error => this.setState({ searchSubmitted: true }));
         }
         e.preventDefault();
     }
@@ -56,14 +55,14 @@ export default class Search extends Component {
         this.searchInput.current.focus();
     }
 
-    handleView(state){
-        if (state.searchSubmitted && !state.searchedImages.length){
+    handleView(){
+        if (this.state.searchSubmitted && !this.state.searchedImages.length){
             return (
                 <p> No images found! Please try searching for something else. </p>
             )
-        } else if (state.searchSubmitted && state.searchedImages.length){
+        } else if (this.state.searchSubmitted && this.state.searchedImages.length){
             return (
-                <Gallery searchedImages={state.searchedImages} searchTerm={state.searchTerm} />
+                <Gallery searchedImages={this.state.searchedImages} searchTerm={this.state.searchTerm} />
             )
         }
     }
@@ -76,9 +75,9 @@ export default class Search extends Component {
                 </div>
                 <form name="imageSearchForm" id="imageSearchForm" onSubmit={this.handleSubmit}>
                     <input type="search" name="imageSearchTerm" placeholder="Search on Bing Images" ref={this.searchInput} value={this.state.value} onChange={this.handleChange}/>
-                    <input type="submit" value="Submit"/>
+                    <input type="submit" value="Submit" className="button"/>
                 </form>
-                {this.handleView(this.state)}
+                {this.handleView()}
             </div>
         )
     }

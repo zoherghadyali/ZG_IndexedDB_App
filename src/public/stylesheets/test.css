@@ -3,6 +3,24 @@ body{
     font-size: 100%;
 }
 
+.button{
+    border-radius: 10px;
+    background-color: #008373;
+    color: white;
+    border: none;
+    padding: 0.5em 1em 0.5em 1em;
+}
+
+.button:active{
+    background-color: #005d52;
+}
+
+.button:disabled{
+    border: 1px solid #999999;
+    background-color: #cccccc;
+    color: #666666;
+}
+
 #logo{
     width: 100%;
 }
@@ -18,12 +36,20 @@ body{
     width: 100%;
 }
 
+#selectViewForm label{
+    margin: 0.5em;
+}
+
 #imageSearchForm{
     text-align: center;
 }
 
 #imageSearchForm input[type=search]{
     width: 75%;
+}
+
+#imageSearchForm input[type=submit]{
+    margin-left: 1em;
 }
 
 #Gallery{
