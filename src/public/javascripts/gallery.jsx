@@ -1,6 +1,5 @@
-// index.js
+// gallery.js
 import React, { Component } from 'react'
-import ReactDOM from 'react-dom'
 
 import ImageView from './imageView.jsx'
 import ClearGallery from './clearGallery.jsx'
@@ -9,17 +8,21 @@ export default class Gallery extends Component {
     constructor(props){
         super(props);
         this.state = {
-            images: props.images,
-            context: props.context,
-            savedImages: [],
+            searchedImages: props.searchedImages,
+            searchTerm: props.searchTerm,
+            savedImageIds: [],
+            savedImageData: [],
             db: undefined,
             loadImagesFromIndexedDB: props.loadImagesFromIndexedDB
         }
 
-        this.updateGallery = this.updateGallery.bind(this);
+        this.addToGallery = this.addToGallery.bind(this);
+        this.clearGallery = this.clearGallery.bind(this);
+        this.removeFromGallery = this.removeFromGallery.bind(this);
     }    
 
     componentWillMount(){
+        var self = this;
         this.openIndexedDB()
             .then(db => {
                 this.setState({
@@ -28,8 +31,13 @@ export default class Gallery extends Component {
                 return this.readAllImagesFromIndexedDB(db);
             })
             .then(items => {
+                var array = [];
+                for (var i = 0; i < items.length; i++){
+                    array.push(items[i].id);
+                }
                 this.setState({
-                    savedImages: items
+                    savedImageData: items,
+                    savedImageIds: array
                 });
                 return;
             });
@@ -37,8 +45,8 @@ export default class Gallery extends Component {
 
     componentWillReceiveProps(nextProps){
         this.setState({
-            images: nextProps.images,
-            context: nextProps.context,
+            searchedImages: nextProps.searchedImages,
+            searchTerm: nextProps.searchTerm,
             loadImagesFromIndexedDB: nextProps.loadImagesFromIndexedDB
         });
     }
@@ -64,7 +72,7 @@ export default class Gallery extends Component {
                 console.log("Creating a new database or upgrading...");
                 db = e.target.result;
                 dbErrorHandler(db, reject);
-                var objectStore = db.createObjectStore("images", { autoIncrement: true });
+                var objectStore = db.createObjectStore("images", { keyPath : "id" , autoIncrement: true })
             }
 
             request.onsuccess = function(e){
@@ -76,19 +84,36 @@ export default class Gallery extends Component {
         });    
     }
 
-    updateGallery(id){
-        if (id === "clear"){
+    addToGallery(id){
+        this.setState({
+            savedImageIds: [...this.state.savedImageIds, id]
+        });
+    }
+
+    clearGallery(){
+        this.setState({
+            savedImageIds: []
+        });
+    }
+
+    removeFromGallery(id){
+        var array = this.state.savedImageIds;
+        var index = array.indexOf(id);
+        var filteredArray = this.state.savedImageData.filter(savedImage => savedImage.id !== id);
+
+        if (index > -1){
+            array.splice(index, 1);
             this.setState({
-                savedImages: []
+                savedImageIds: array,
+                savedImageData: filteredArray
             });
         } else {
-            this.setState({
-                savedImages: [...this.state.savedImages, id]
-            });
+            console.error("The id to be removed isn't in the array of savedImageIds. How did this happen?");
         }
     }
 
     readAllImagesFromIndexedDB(db){
+        var self = this;
         return new Promise((resolve, reject) => {
             var transaction = db.transaction(["images"], "readonly");
             
@@ -102,6 +127,13 @@ export default class Gallery extends Component {
             var objectStore = transaction.objectStore("images"); 
             var getAll = objectStore.openCursor();
 
+            //if Edge supported getAllKeys() method for objectStore
+            // var getAll = objectStore.getAllKeys();
+
+            // getAll.onsuccess = function(e) {
+            //     resolve(e.target.result);
+            // }
+
             var items = [];
 
             getAll.onsuccess = function(e) {
@@ -110,7 +142,7 @@ export default class Gallery extends Component {
                     resolve(items);
                     return;
                 }
-                items.push(cursor.value.id);
+                items.push(cursor.value);
                 cursor.continue();
             };
         });
@@ -118,19 +150,40 @@ export default class Gallery extends Component {
 
     handleView(state){
         if (state.loadImagesFromIndexedDB){
-            return (
-                <p>Saved images: </p>
-            );
+            if (state.savedImageData.length){
+                return (
+                    <div>
+                        <div id="GalleryHeader">
+                            <p>Saved images:</p>
+                            <ClearGallery db={state.db} clearGallery={this.clearGallery}/>
+                        </div>
+                        <div id="Gallery">
+                            {state.savedImageData.map((savedImage)=>
+                                <ImageView url={savedImage.data} key={savedImage.id} saved id={savedImage.id} loadImagesFromIndexedDB addToGallery={this.addToGallery} removeFromGallery={this.removeFromGallery} db={state.db}/>
+                            )}
+                        </div>
+                    </div>
+                );
+            } else {
+                return (
+                    <div>
+                        <p>Saved images: </p>
+                        <p>Uh-oh! It looks like you haven't saved any images yet.</p>
+                    </div>
+                );
+            }
         } else {
             return (
                 <div>
-                    <p>Found {state.images.length} results for '{state.context}'</p>
+                    <div id="GalleryHeader">
+                        <p>Found {state.searchedImages.length} results for '{state.searchTerm}'</p>
+                        <ClearGallery db={state.db} clearGallery={this.clearGallery}/>
+                    </div>
                     <div id="Gallery">
-                        {state.images.map((image)=>
-                            <ImageView url={image.contentUrl} key={image.imageId} saved={state.savedImages.includes(image.imageId)} id={image.imageId} loadImagesFromIndexedDB={state.loadImagesFromIndexedDB} updateGallery={this.updateGallery} db={state.db}/>
+                        {state.searchedImages.map((image)=>
+                            <ImageView url={image.contentUrl} key={image.imageId} saved={state.savedImageIds.includes(image.imageId)} id={image.imageId} loadImagesFromIndexedDB={state.loadImagesFromIndexedDB}  addToGallery={this.addToGallery} removeFromGallery={this.removeFromGallery} db={state.db}/>
                         )}
                     </div>
-                    <ClearGallery db={state.db} updateGallery={this.updateGallery}/>
                 </div>
             )
         }

@@ -1,6 +1,5 @@
-// index.js
+// banner.jsx
 import React, { Component } from 'react'
-import ReactDOM from 'react-dom'
 
 import test from '../stylesheets/test.css'
 import Search from './search.jsx'
@@ -29,14 +28,10 @@ export default class Banner extends Component {
             )
         } else if (state.selectedView === "Gallery"){
             return (
-                <Gallery loadImagesFromIndexedDB />
+                <Gallery loadImagesFromIndexedDB={true} />
             )
         } else {
-            console.log("How the fuck did you get here? Here is the state: ");
-            console.log(state);
-            return (
-                <p>How the fuck did you get here?</p>
-            )  
+            console.error("Unknown state in Banner component: ", state);
         }
     }
     

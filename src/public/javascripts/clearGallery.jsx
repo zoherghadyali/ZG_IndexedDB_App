@@ -7,7 +7,7 @@ export default class ClearGallery extends Component {
         super(props);
         this.state = {
             db: props.db,
-            updateGallery: props.updateGallery
+            clearGallery: props.clearGallery
         }
 
         this.handleClick = this.handleClick.bind(this);
@@ -41,7 +41,7 @@ export default class ClearGallery extends Component {
 
     handleClick(e){
         this.clearIndexedDB()
-            .then(id => this.state.updateGallery(id));
+            .then(this.state.clearGallery());
         e.preventDefault()
     }
     

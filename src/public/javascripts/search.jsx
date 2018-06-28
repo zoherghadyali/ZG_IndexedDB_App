@@ -1,6 +1,5 @@
-// index.js
+// search.jsx
 import React, { Component } from 'react'
-import ReactDOM from 'react-dom'
 
 import logoImage from '../images/bing.jpg'
 import Gallery from './gallery.jsx'
@@ -11,7 +10,7 @@ export default class Search extends Component {
         this.state = {
             searchSubmitted: false,
             searchTerm: '',
-            searchTermImages: []
+            searchedImages: []
         }
 
         this.searchInput = React.createRef();
@@ -37,7 +36,7 @@ export default class Search extends Component {
             .then(res => {
                 if (!res.ok){
                     console.error(res.statusText);
-                    return res;
+                    throw res.statusText;
                 } else {
                     return res.json()
                 }
@@ -45,9 +44,10 @@ export default class Search extends Component {
             .then(function(json){
                 self.setState({
                     searchSubmitted: true,
-                    searchTermImages: json.value
+                    searchedImages: json.value
                 });
-            });
+            })
+            .catch(self.setState({ searchSubmitted: true }));
         }
         e.preventDefault();
     }
@@ -57,13 +57,13 @@ export default class Search extends Component {
     }
 
     handleView(state){
-        if (state.searchSubmitted && !state.searchTermImages.length){
+        if (state.searchSubmitted && !state.searchedImages.length){
             return (
                 <p> No images found! Please try searching for something else. </p>
             )
-        } else if (state.searchSubmitted && state.searchTermImages.length){
+        } else if (state.searchSubmitted && state.searchedImages.length){
             return (
-                <Gallery images={state.searchTermImages} context={state.searchTerm} />
+                <Gallery searchedImages={state.searchedImages} searchTerm={state.searchTerm} />
             )
         }
     }
