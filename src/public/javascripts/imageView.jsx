@@ -55,8 +55,7 @@ export default class ImageView extends Component {
             };
                         
             transaction.onerror = function(e) {
-                console.error("Transaction error: ", e.target.errorCode);
-                reject(e.target.errorCode);
+                throw e.target.errorCode;
             };  
                 
             var objectStore = transaction.objectStore("images"); 
@@ -70,7 +69,6 @@ export default class ImageView extends Component {
             })
             .then(res => {
                 if (!res.ok){
-                    console.error(res.statusText);
                     throw res.statusText;
                 } else {
                     return res.blob()
@@ -79,14 +77,20 @@ export default class ImageView extends Component {
             .then(blob => this.blobToDataUrl(blob))
             .then(dataUrl => this.saveToIndexedDB(dataUrl))
             .then(id => this.props.addToGallery(id))
-            .catch(error => this.setState({ disabled: true }));
+            .catch(error => {
+                console.error(error);
+                this.setState({ disabled: true });
+            });
         e.preventDefault();
     }
 
     handleDelete(e){
         this.deleteFromIndexedDB()
             .then(id => this.props.removeFromGallery(id))
-            .catch(error => this.setState({ disabled: true }));
+            .catch(error => {
+                console.error("Transaction error: ", error);
+                this.setState({ disabled: true })
+            });
         e.preventDefault();
     }
 

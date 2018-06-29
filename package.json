@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev-webpack": "webpack-dev-server --env.dev",
+    "build-prod": "set NODE_ENV=production && webpack",
     "build-node": "nodemon app.js",
     "build-webpack": "webpack --watch",
     "test": "echo \"Error: no test specified\" && exit 1"

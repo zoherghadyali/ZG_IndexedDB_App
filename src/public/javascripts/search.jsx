@@ -34,7 +34,6 @@ export default class Search extends Component {
             })
             .then(res => {
                 if (!res.ok){
-                    console.error(res.statusText);
                     throw res.statusText;
                 } else {
                     return res.json()
@@ -46,7 +45,10 @@ export default class Search extends Component {
                     searchedImages: json.value
                 });
             })
-            .catch(error => this.setState({ searchSubmitted: true }));
+            .catch(error => {
+                console.error(error);
+                this.setState({ searchSubmitted: true });
+            });
         }
         e.preventDefault();
     }
