@@ -7,6 +7,7 @@ module.exports = options => {
   return {
     entry: './src/public/javascripts/index.js',
     mode: 'development',
+    devtool: 'inline-source-map',
     output: {
       path: path.join(__dirname, 'dist\\public\\javascripts'),
       filename: 'bundle.js',
