@@ -64,7 +64,9 @@ export default class ImageView extends Component {
     }
     
     handleSave(e){
-        fetch(this.props.url, {
+        //adding this to securely fetch images
+        var test = this.props.url.slice(0, 4) + "s" + this.props.url.slice(4)
+        fetch(test, {
                 method: 'GET'
             })
             .then(res => {
